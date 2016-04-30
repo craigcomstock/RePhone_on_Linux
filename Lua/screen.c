@@ -75,6 +75,12 @@ int screen_init(lua_State *L)
     g_frame.height = 240;
     g_frame.color_format = VM_GRAPHIC_COLOR_FORMAT_16_BIT;
     g_frame.buffer = (VMUINT8*)vm_malloc_dma(g_frame.width * g_frame.height * 2);
+    if (g_frame.buffer == 0) {
+	    fprintf(stderr, "Unable to vm_malloc_dma for screen buffer.\n");
+	    g_frame.buffer = (VMUINT8*)vm_malloc_dma(10 * 10 * 2); // very small buffer! :p
+	    fprintf(stderr, "Tried to malloc 10x10 buffer, g_frame.buffer=%d\n", g_frame.buffer);
+	    // this works. :( Gives me g_frame.buffer=3286272, is that a set addr???
+    }
     g_frame.buffer_length = (g_frame.width * g_frame.height * 2);
 
     g_frame_blt_group[0] = &g_frame;
@@ -86,6 +92,8 @@ int screen_init(lua_State *L)
 
 
     vm_graphic_blt_frame(g_frame_blt_group, positions, 1);
+
+    fprintf(stderr, "g_grame.buffer=%d\n", g_frame.buffer);
     
     return 0;
 }
@@ -99,6 +107,8 @@ int screen_on_touch(lua_State *L)
 
 int screen_update(lua_State *L)
 {
+//	fprintf(stderr, "screen_update\n");
+
     vm_graphic_point_t positions[1] = { 0, 0 };
     vm_graphic_blt_frame(g_frame_blt_group, positions, 1);
     
@@ -145,7 +155,10 @@ int screen_point(lua_State *L)
     uint16_t x = luaL_checkinteger(L, 1);
     uint16_t y = luaL_checkinteger(L, 2);
 
-    _draw_point(x, y);
+    // CRAIG TODO it seems any function here which tries to push into g_frame.buffer crashes/reboots. So use the APIs instead.
+    vm_graphic_draw_point(&g_frame, x, y);
+
+//    _draw_point(x, y);
 
     return 0;
 }
@@ -217,6 +230,11 @@ int screen_fill(lua_State *L)
     uint16_t w = luaL_checkinteger(L, 3);
     uint16_t h = luaL_checkinteger(L, 4);
     int top = lua_gettop(L);
+
+    vm_graphic_draw_solid_rectangle(&g_frame,x,y,w,h);
+
+    return 0;
+    // skip the crashing code below
     
     uint16_t *pbuf = (uint16_t*)g_frame.buffer + y * 240 + x;
     
@@ -252,8 +270,8 @@ int screen_fill(lua_State *L)
 
 static const luaL_Reg screen_lib[] =
 {
-    {"init", screen_init},
-    {"set_color", screen_set_color},
+    {"init", screen_init}, // call this first
+    {"set_color", screen_set_color}, // screen.set_color(RGB value)
     {"get_color", screen_get_color},
     {"line", screen_line},
     {"point", screen_point},
@@ -261,7 +279,16 @@ static const luaL_Reg screen_lib[] =
     {"fill", screen_fill},
     {"update", screen_update},
     {"set_brightness", screen_set_brightness},
-    {"touch", screen_on_touch},
+    /*
+     * screen.touch( function(type,x,y) end );
+     * type =   1 touch down/start
+     * 		2 touch release/stop
+     * 		3 move
+     * 		4 medium length press
+     * 		6 long press
+     */
+    {"touch", screen_on_touch}, // screen.touch(callback(type,x,y))
+    
     {NULL, NULL}
 };
 

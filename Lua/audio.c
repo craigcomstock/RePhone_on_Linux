@@ -1,4 +1,5 @@
-
+// CRAIG TODO from mre src
+// VMINT vm_audio_play_bytes(void *audio_data, VMUINT len, VMUINT8 format, VMUINT start_time, VMUINT path, void (*f)(VMINT result))
 #include <string.h>
 
 #include "vmsystem.h"
@@ -63,7 +64,8 @@ static void _audio_play(char *name)
   memset(&play_parameters, 0, sizeof(vm_audio_play_parameters_t));
   play_parameters.filename = w_file_name;
   play_parameters.reserved = 0;  /* no use, set to 0 */
-  play_parameters.format = VM_AUDIO_FORMAT_MP3; /* file format */
+  //play_parameters.format = VM_AUDIO_FORMAT_MP3; /* file format */
+  play_parameters.format = VM_AUDIO_FORMAT_WAV; /* file format */
   play_parameters.output_path = VM_AUDIO_DEVICE_SPEAKER2; /* set device to output */
   play_parameters.async_mode = 0;
   play_parameters.callback = audio_play_callback;

@@ -3,12 +3,15 @@ WORKSPACE_PATH = ../
 
 PROJECT = lua
 
-OBJECTS += main.o retarget.o shell.o audio.o gsm.o timer.o gpio.o i2c.o tcp.o https.o gprs.o sntp.o
+OBJECTS += main.o retarget.o shell.o audio.o gsm.o timer.o gpio.o i2c.o tcp.o https.o gprs.o sntp.o power.o bluetooth.o sam.o
 OBJECTS += screen.o
 
 OBJECTS += lua/lapi.o lua/lcode.o lua/ldebug.o lua/ldo.o lua/ldump.o lua/lfunc.o lua/lgc.o lua/llex.o lua/lmem.o lua/lobject.o lua/lopcodes.o \
 lua/lparser.o lua/lstate.o lua/lstring.o lua/ltable.o lua/ltm.o lua/lundump.o lua/lvm.o lua/lzio.o lua/lrotable.o lua/lauxlib.o lua/lbaselib.o \
 lua/ldblib.o lua/liolib.o lua/lmathlib.o lua/loslib.o lua/ltablib.o lua/lstrlib.o lua/loadlib.o lua/linit.o lua/print.o lua/linenoise.o lua/legc.o
+
+OBJECTS += sam/reciter.o sam/render.o sam/sam.o sam/debug.o
+INCLUDE_PATHS += -I./sam
 
 INCLUDE_PATHS += -I./lua
 
@@ -17,7 +20,7 @@ INCLUDE_PATHS += -I./lua
 #PROJECT_PATH := $(patsubst %/Makefile,%,$(realpath $(lastword $(MAKEFILE_LIST))))
 #PROJECT_PATH := $(patsubst %/makefile,%,$(PROJECT_PATH))
 
-GCC_BIN ?= /usr/bin/
+#GCC_BIN ?= /usr/bin/
 
 OBJECTS += $(WORKSPACE_PATH)common/lcd_sitronix_st7789s.o $(WORKSPACE_PATH)common/tp_goodix_gt9xx.o $(WORKSPACE_PATH)common/tp_i2c.o
 SYS_OBJECTS += $(WORKSPACE_PATH)common/gccmain.o
@@ -92,3 +95,7 @@ size: $(PROJECT).elf
 
 flash: $(PROJECT).vxp
 	$(PUSH)
+
+install: $(PROJECT).vxp
+	cp $(PROJECT).vxp /media/3021-0050/MRE
+	sync

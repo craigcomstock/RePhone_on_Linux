@@ -15,6 +15,9 @@
 #include "vmwdt.h"
 #include "vmpwr.h"
 
+// CRAIG TODO write out a log file for early init debugging
+#include "vmfs.h"
+
 #include "shell.h"
 
 #include "lua.h"
@@ -23,6 +26,7 @@
 
 extern void retarget_setup();
 extern int luaopen_audio(lua_State *L);
+extern int luaopen_bluetooth(lua_State *L);
 extern int luaopen_gsm(lua_State *L);
 extern int luaopen_timer(lua_State *L);
 extern int luaopen_gpio(lua_State *L);
@@ -32,6 +36,8 @@ extern int luaopen_tcp(lua_State* L);
 extern int luaopen_https(lua_State* L);
 extern int luaopen_gprs(lua_State* L);
 extern int luaopen_os(lua_State* L);
+extern int luaopen_power(lua_State* L);
+extern int luaopen_sam(lua_State* L);
 
 lua_State *L = NULL;
 
@@ -95,6 +101,8 @@ static int msleep_c(lua_State *L)
 //--------------
 void lua_setup()
 {
+	fprintf(stderr, "lua_setup()\n");
+
     VM_THREAD_HANDLE handle;
 
     L = lua_open();
@@ -102,6 +110,7 @@ void lua_setup()
     luaL_openlibs(L);  /* open libraries */
 
     luaopen_audio(L);
+    luaopen_bluetooth(L);
     luaopen_gsm(L);
     luaopen_timer(L);
     luaopen_gpio(L);
@@ -111,12 +120,18 @@ void lua_setup()
     luaopen_https(L);
     luaopen_gprs(L);
     luaopen_os(L);
+    luaopen_power(L);
+    luaopen_sam(L);
 
     lua_register(L, "msleep", msleep_c);
 
     lua_gc(L, LUA_GCRESTART, 0);
 
+    fprintf(stderr, "before init.lua\n");
+
     luaL_dofile(L, "init.lua");
+
+    fprintf(stderr, "after init.lua\n");
 
     if (0)
     {
@@ -131,6 +146,9 @@ void lua_setup()
     }
 
     handle = vm_thread_create(shell_thread, L, 245);
+
+    fprintf(stderr, "after vm_thread_create\n");
+
 }
 
 //--------------------------------------------
@@ -153,7 +171,10 @@ void handle_sysevt(VMINT message, VMINT param)
             break;
         case VM_EVENT_PAINT:
         	// The graphics system is ready for application to use
-        	//printf("\n[SYSEVT] GRAPHIC READY\n");
+        	printf("\n[SYSEVT] GRAPHIC READY\n");
+//		fprintf(stderr, "before graphics.lua\n");
+//		luaL_dofile(L, "graphics.lua");
+//		fprintf(stderr, "after graphics.lua\n");
         	break;
         case VM_EVENT_QUIT:
         	printf("\n[SYSEVT] QUIT\n");
