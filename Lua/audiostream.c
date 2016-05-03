@@ -43,6 +43,10 @@ static void audio_put_data()
   if (as_offset >= as_file_size)
   {
 	  vm_audio_stream_play_finish(as_handle);
+	  vm_timer_delete_precise(as_timer_id);
+    vm_audio_stream_play_stop(as_handle);
+    vm_audio_stream_play_close(as_handle);
+    vm_fs_close(as_file_hdl);
     return;
   }
   
@@ -98,10 +102,15 @@ static void audio_put_data()
   {
 	/* no data to play hence stop the playback */
 	  printf("CRAIG calling vm_audio_stream_play_finish()\n");
+	  
 
 
 
     vm_audio_stream_play_finish(as_handle);
+    vm_timer_delete_precise(as_timer_id);
+    vm_audio_stream_play_stop(as_handle);
+    vm_audio_stream_play_close(as_handle);
+    vm_fs_close(as_file_hdl);
   }
 }
 
@@ -122,6 +131,9 @@ void as_audio_callback(VM_AUDIO_HANDLE handle, VM_AUDIO_RESULT result, void* use
   }
 }
 
+// CRAIG TODO audio_stream(char *buffer)
+// then use in sam.say()
+// then play!!!
 
 
 /* Open file and prepare to put data */
@@ -133,6 +145,8 @@ void audio_open_file(char *name)
   VMWCHAR w_file_name[MAX_NAME_LEN] = {0};
   VMCHAR file_name[MAX_NAME_LEN];
   vm_audio_stream_play_config_t audio_cfg;
+
+  as_offset = 0; // reset to 0 on repeated plays
   
   drv = vm_fs_get_removable_drive_letter();
   if(drv <0)
@@ -191,9 +205,13 @@ void audio_put_data_timer_cb (VMINT tid, void* user_data)
 
 int audiostream_play(lua_State *L)
 {
+	// CRAIG TODO inhibit repeated calls since after this
+	// things are async.
 	printf("CRAIG audiostream_play ENTER\n");
 
 	char *name = lua_tostring(L, -1);
+
+	as_offset = 0;
 
 	audio_open_file(name);
 
