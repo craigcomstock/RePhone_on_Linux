@@ -12,12 +12,20 @@ lua/ldblib.o lua/liolib.o lua/lmathlib.o lua/loslib.o lua/ltablib.o lua/lstrlib.
 
 INCLUDE_PATHS += -I./lua
 
+# craig stuff
+#OBJECTS += power.o bluetooth.o audiostream.o
+OBJECTS += audiostream.o
+
+# sam stuff
+#OBJECTS += sam/reciter.o sam/render.o sam/sam.o sam/debug.o sam.o
+#INCLUDE_PATHS += -I./sam
+
 # ===============================================================================
 
 #PROJECT_PATH := $(patsubst %/Makefile,%,$(realpath $(lastword $(MAKEFILE_LIST))))
 #PROJECT_PATH := $(patsubst %/makefile,%,$(PROJECT_PATH))
 
-GCC_BIN ?= /usr/bin/
+#GCC_BIN ?= /usr/bin/
 
 OBJECTS += $(WORKSPACE_PATH)common/lcd_sitronix_st7789s.o $(WORKSPACE_PATH)common/tp_goodix_gt9xx.o $(WORKSPACE_PATH)common/tp_i2c.o
 SYS_OBJECTS += $(WORKSPACE_PATH)common/gccmain.o

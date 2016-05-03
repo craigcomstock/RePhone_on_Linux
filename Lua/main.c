@@ -26,12 +26,16 @@ extern int luaopen_audio(lua_State *L);
 extern int luaopen_gsm(lua_State *L);
 extern int luaopen_timer(lua_State *L);
 extern int luaopen_gpio(lua_State *L);
-extern int luaopen_screen(lua_State *L);
+extern int luaopen_scree(lua_State *L);
 extern int luaopen_i2c(lua_State *L);
 extern int luaopen_tcp(lua_State* L);
 extern int luaopen_https(lua_State* L);
 extern int luaopen_gprs(lua_State* L);
 extern int luaopen_os(lua_State* L);
+//extern int luaopen_power(lua_State* L);
+//extern int luaopen_sam(lua_State* L);
+//extern int luaopen_bluetooth(lua_State* L);
+extern int luaopen_audiostream(lua_State* L);
 
 lua_State *L = NULL;
 
@@ -111,6 +115,10 @@ void lua_setup()
     luaopen_https(L);
     luaopen_gprs(L);
     luaopen_os(L);
+//    luaopen_power(L);
+//    luaopen_sam(L);
+//    luaopen_bluetooth(L);
+    luaopen_audiostream(L);
 
     lua_register(L, "msleep", msleep_c);
 

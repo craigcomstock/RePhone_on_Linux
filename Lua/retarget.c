@@ -37,6 +37,9 @@ void retarget_putc(char ch)
     VM_DCL_BUFFER_LENGTH writen_len = 0;
     if (retarget_target == 0) vm_dcl_write(retarget_device_handle, (VM_DCL_BUFFER *)&ch, 1, &writen_len, g_owner_id);
     else if (retarget_target == 1) vm_dcl_write(retarget_uart1_handle, (VM_DCL_BUFFER *)&ch, 1, &writen_len, g_owner_id);
+    if(ch==10) { 
+	    retarget_putc(13);
+    }
 }
 
 //---------------------------------
