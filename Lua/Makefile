@@ -20,6 +20,16 @@ OBJECTS += audiostream.o
 #OBJECTS += sam/reciter.o sam/render.o sam/sam.o sam/debug.o sam.o
 #INCLUDE_PATHS += -I./sam
 
+# ed... I know... I am beyond hilarious...
+#ed-1.6/buffer.c
+#ed-1.6/carg_parser.c
+#ed-1.6/global.c
+#ed-1.6/io.c
+#ed-1.6/main.c
+#ed-1.6/main_loop.c
+#ed-1.6/regex.c
+#ed-1.6/signal.c
+
 # ===============================================================================
 
 #PROJECT_PATH := $(patsubst %/Makefile,%,$(realpath $(lastword $(MAKEFILE_LIST))))
@@ -100,3 +110,8 @@ size: $(PROJECT).elf
 
 flash: $(PROJECT).vxp
 	$(PUSH)
+
+install: $(PROJECT).vxp
+	cp lua.vxp /media/3021-01A2/MRE
+	cp *.lua /media/3021-01A2
+	#umount /media/3021-01A2

@@ -68,7 +68,10 @@ static void _audio_play(char *name)
   play_parameters.async_mode = 0;
   play_parameters.callback = audio_play_callback;
   play_parameters.user_data = NULL;
+
   g_audio_handle = vm_audio_play_open(&play_parameters);
+  vm_log_debug("vm_audio_play_open => %d\n", g_audio_handle);
+
   if(g_audio_handle >= VM_OK)
   {
     vm_log_info("open success");
