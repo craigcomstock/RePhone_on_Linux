@@ -10,7 +10,6 @@
 #include "vmtimer.h"
 #include "vmdcl.h"
 #include "vmdcl_kbd.h"
-#include "vmdcl_gpio.h"
 #include "vmkeypad.h"
 #include "vmthread.h"
 #include "vmwdt.h"
@@ -18,26 +17,7 @@
 
 #include "shell.h"
 
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-
 extern void retarget_setup();
-extern int gpio_get_handle(int pin, VM_DCL_HANDLE* handle);
-extern int luaopen_audio(lua_State *L);
-extern int luaopen_gsm(lua_State *L);
-extern int luaopen_timer(lua_State *L);
-extern int luaopen_gpio(lua_State *L);
-extern int luaopen_screen(lua_State *L);
-extern int luaopen_i2c(lua_State *L);
-extern int luaopen_tcp(lua_State* L);
-extern int luaopen_https(lua_State* L);
-extern int luaopen_gprs(lua_State* L);
-extern int luaopen_os(lua_State* L);
-//extern int luaopen_power(lua_State* L);
-//extern int luaopen_sam(lua_State* L);
-//extern int luaopen_bluetooth(lua_State* L);
-extern int luaopen_audiostream(lua_State* L);
 
 lua_State *L = NULL;
 
@@ -107,21 +87,6 @@ void lua_setup()
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
 
-    luaopen_audio(L);
-    luaopen_gsm(L);
-    luaopen_timer(L);
-    luaopen_gpio(L);
-    luaopen_screen(L);
-    luaopen_i2c(L);
-    luaopen_tcp(L);
-    luaopen_https(L);
-    luaopen_gprs(L);
-    luaopen_os(L);
-//    luaopen_power(L);
-//    luaopen_sam(L);
-//    luaopen_bluetooth(L);
-    luaopen_audiostream(L);
-
     lua_register(L, "msleep", msleep_c);
 
     lua_gc(L, LUA_GCRESTART, 0);
@@ -143,49 +108,18 @@ void lua_setup()
     handle = vm_thread_create(shell_thread, L, 245);
 }
 
-void bluelight()
-{
-	VM_DCL_HANDLE handle;
-#define RED 17
-#define GREEN 15
-#define BLUE 12
-
-	int pin = RED;
-	if(gpio_get_handle(pin, &handle) == VM_DCL_HANDLE_INVALID) {
-		return;
-	}
-	vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_MODE_0, NULL);
-	vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_DIRECTION_OUT, NULL);
-	vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_WRITE_LOW, NULL);
-
-	pin = GREEN;
-	if(gpio_get_handle(pin, &handle) == VM_DCL_HANDLE_INVALID) {
-		return;
-	}
-	vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_MODE_0, NULL);
-	vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_DIRECTION_OUT, NULL);
-	vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_WRITE_HIGH, NULL);
-
-
-}
-
 //--------------------------------------------
 void handle_sysevt(VMINT message, VMINT param)
 {
     switch (message) {
         case VM_EVENT_CREATE:
             //sys_timer_id = vm_timer_create_precise(SYS_TIMER_INTERVAL, sys_timer_callback, NULL);
-	    
-
-		bluelight();
-
-            lua_setup();
-
+//            lua_setup();
             break;
 		case SHELL_MESSAGE_ID:
 			// MANY vm_xxx FUNCTIONS CAN BE EXECUTED ONLY FROM THE MAIN THREAD!!
 			// execute lua "docall(L, 0, 0)", WAITS for execution!!
-			shell_docall(L);
+//			shell_docall(L);
 			break;
 
         case SHELL_MESSAGE_QUIT:
@@ -212,8 +146,8 @@ void vm_main(void)
     retarget_setup();
     vm_log_info("LUA for RePhone started");
 
-    key_init();
-    vm_keypad_register_event_callback(handle_keypad_event);
+//    key_init();
+//    vm_keypad_register_event_callback(handle_keypad_event);
 
     /* register system events handler */
     vm_pmng_register_system_event_callback(handle_sysevt);

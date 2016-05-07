@@ -1,8 +1,7 @@
 
-PROJECT = luajit
+PROJECT = uart
 
-OBJECTS += simple.o retarget.o
-#OBJECTS += main.o retarget.o luajit.o
+OBJECTS += main.o 
 
 # ===============================================================================
 
@@ -17,10 +16,8 @@ OBJECTS += $(WORKSPACE_PATH)common/lcd_sitronix_st7789s.o $(WORKSPACE_PATH)commo
 SYS_OBJECTS += $(WORKSPACE_PATH)common/gccmain.o
 INCLUDE_PATHS += -I. -I$(WORKSPACE_PATH)include -I$(WORKSPACE_PATH)common
 INCDIRS += -I. -I$(WORKSPACE_PATH)include -I$(WORKSPACE_PATH)common
-INCLUDE_PATHS += -I../LuaJIT-2.0.4/src
 LIBRARY_PATHS += -L$(WORKSPACE_PATH)lib
 LIBRARIES += $(WORKSPACE_PATH)lib/LINKIT10/armgcc/percommon.a -lm
-LIBRARIES += ../LuaJIT-2.0.4/src/libluajit.a
 LINKER_SCRIPT = $(WORKSPACE_PATH)lib/LINKIT10/armgcc/scat.ld
 
 ###############################################################################
@@ -91,6 +88,5 @@ flash: $(PROJECT).vxp
 	$(PUSH)
 
 install: $(PROJECT).vxp
-	cp $(PROJECT).vxp /media/3021-01A2/MRE
-	cp *.lua /media/3021-01A2
+	cp $(PROJECT).vxp /media/3021-01A2
 	cp autostart.txt /media/3021-01A2

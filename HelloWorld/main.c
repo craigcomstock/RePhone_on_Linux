@@ -18,6 +18,14 @@
 
 extern void retarget_setup();
 
+VM_TIMER_ID_PRECISE g_timer_id;
+int count;
+
+void timer_cb (VMINT tid, void* user_data)
+{
+	printf("CRAIG timer_cb, count=%d\n", count++);
+}
+
 void handle_sysevt(VMINT message, VMINT param) 
 {
 	int i = 0;
@@ -25,10 +33,14 @@ void handle_sysevt(VMINT message, VMINT param)
     switch (message) 
     {
     case VM_EVENT_CREATE:
-	    while(1) {
-		    printf("CRAIG boink %d\n", i++);
-		    vm_thread_sleep(1000);
+	    count = 0;
+	    g_timer_id = vm_timer_create_precise(1000, timer_cb, NULL);
+
+	    while(1) 
+	    {
+		    putchar(getchar());
 	    }
+
         break;
 
     case VM_EVENT_QUIT:

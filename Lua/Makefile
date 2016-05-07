@@ -112,6 +112,7 @@ flash: $(PROJECT).vxp
 	$(PUSH)
 
 install: $(PROJECT).vxp
-	cp lua.vxp /media/3021-01A2/MRE
-	cp *.lua /media/3021-01A2
+	cp lua.vxp /media/3021-*/MRE
+	cp *.lua /media/3021-*
+	cp autostart.txt /media/3021-*
 	#umount /media/3021-01A2

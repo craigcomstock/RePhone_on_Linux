@@ -6,8 +6,6 @@
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
 */
 
-extern void retarget_setup();
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -555,16 +553,8 @@ static int pmain(lua_State *L)
   return 0;
 }
 
-int vm_main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-	retarget_setup();
-	int i = 0;
-	while(1) {
-		i++;
-		sleep(100);
-		printf("CRAIG boink %d\n",i);
-	}
-
   int status;
   lua_State *L = lua_open();  /* create state */
   if (L == NULL) {
@@ -578,4 +568,3 @@ int vm_main(int argc, char **argv)
   lua_close(L);
   return (status || smain.status) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
-
