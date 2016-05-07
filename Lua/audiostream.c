@@ -260,7 +260,9 @@ int audiostream_play(lua_State *L)
 	// things are async.
 	printf("CRAIG audiostream_play ENTER\n");
 
-	char *name = lua_tostring(L, 1);
+//	char *name = lua_tostring(L, 1);
+	int buffer_size = luaL_checkint(L,1);
+	void *buffer = luaL_
 	int is_stereo = luaL_checkint(L,2);
 	int bit_per_sample = luaL_checkint(L,3);
 	int sample_frequency = luaL_checkint(L,4);
@@ -286,23 +288,5 @@ int audiostream_play(lua_State *L)
 
 	printf("CRAIG audiostream_play EXIT\n");
 
-	return 1;
-}
-
-
-#undef MIN_OPT_LEVEL
-#define MIN_OPT_LEVEL 0 // ???
-#include "lrodefs.h"
-
-const LUA_REG_TYPE audiostream_map[] =
-{
-	{LSTRKEY("play"), LFUNCVAL(audiostream_play)},
-	{LSTRKEY("stop"), LFUNCVAL(audiostream_stop)},
-	{LNILKEY, LNILVAL}
-};
-
-LUALIB_API int luaopen_audiostream(lua_State *L)
-{
-	luaL_register(L, "audiostream", audiostream_map);
 	return 1;
 }

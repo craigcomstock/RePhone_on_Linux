@@ -35,9 +35,8 @@ extern int luaopen_https(lua_State* L);
 extern int luaopen_gprs(lua_State* L);
 extern int luaopen_os(lua_State* L);
 //extern int luaopen_power(lua_State* L);
-//extern int luaopen_sam(lua_State* L);
+extern int luaopen_sam(lua_State* L);
 //extern int luaopen_bluetooth(lua_State* L);
-extern int luaopen_audiostream(lua_State* L);
 
 lua_State *L = NULL;
 
@@ -118,9 +117,8 @@ void lua_setup()
     luaopen_gprs(L);
     luaopen_os(L);
 //    luaopen_power(L);
-//    luaopen_sam(L);
+    luaopen_sam(L);
 //    luaopen_bluetooth(L);
-    luaopen_audiostream(L);
 
     lua_register(L, "msleep", msleep_c);
 
@@ -150,7 +148,7 @@ void bluelight()
 #define GREEN 15
 #define BLUE 12
 
-	int pin = RED;
+	int pin = BLUE;
 	if(gpio_get_handle(pin, &handle) == VM_DCL_HANDLE_INVALID) {
 		return;
 	}

@@ -13,12 +13,12 @@ lua/ldblib.o lua/liolib.o lua/lmathlib.o lua/loslib.o lua/ltablib.o lua/lstrlib.
 INCLUDE_PATHS += -I./lua
 
 # craig stuff
-#OBJECTS += power.o bluetooth.o audiostream.o
-OBJECTS += audiostream.o
+#OBJECTS += power.o bluetooth.o 
+#OBJECTS += audiostream.o
 
 # sam stuff
-#OBJECTS += sam/reciter.o sam/render.o sam/sam.o sam/debug.o sam.o
-#INCLUDE_PATHS += -I./sam
+OBJECTS += sam/reciter.o sam/render.o sam/sam.o sam/debug.o sam.o
+INCLUDE_PATHS += -I./sam
 
 # ed... I know... I am beyond hilarious...
 #ed-1.6/buffer.c
