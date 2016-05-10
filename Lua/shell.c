@@ -162,6 +162,8 @@ static int loadline (lua_State *L) {
   return status;
 }
 
+extern void bluelight(); // from main.c
+
 // Main lua shell loop
 //================================
 static void dotty (lua_State *L) {
@@ -170,6 +172,8 @@ static void dotty (lua_State *L) {
   progname = NULL;
 
   printf("\nLUA SHELL STARTED\n");
+
+//  bluelight();
 
   while ((status = loadline(L)) != -1) {
     if (status == 0) status = remote_docall(); //docall(L, 0, 0);

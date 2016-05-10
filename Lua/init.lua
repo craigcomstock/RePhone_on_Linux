@@ -37,3 +37,5 @@ end
 m = function()
 	audiostream.play('music.mp3',-1,-1,-1,5);
 end
+
+fre = free = function() print(os.mem()) end

@@ -138,6 +138,8 @@ void Init()
 int SAMMain()
 {
 	Init();
+	if(buffer == NULL) return 0;
+
 	phonemeindex[255] = 32; //to prevent buffer overflow
 
 	if (!Parser1()) return 0;

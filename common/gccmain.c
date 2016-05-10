@@ -60,7 +60,7 @@ extern caddr_t _sbrk(int incr)
     prev_heap = heap;
 
     if(heap + incr > g_base_address + g_memory_size) {
-        vm_log_fatal("Not enough memory");
+        vm_log_fatal("Not enough memory. heap(%d) + incr(%d) > g_base_address(%d) + g_memory_size(%d)", heap, incr, g_base_address, g_memory_size);
     }
     else {
     	heap += incr;

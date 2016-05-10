@@ -10,6 +10,16 @@
 #include "vmtouch.h"
 #include "tp_goodix_gt9xx.h"
 
+// CRAIG add draw text
+#include "vmgraphic_font.h"
+#include "vmchset.h"
+#define SCREEN_WIDTH 240
+#define SCREEN_HEIGHT 240
+#define STRING_LENGTH 255
+VMWCHAR g_wide_string[STRING_LENGTH];
+VMUINT8* font_pool;
+
+
 #include "lua.h"
 #include "lauxlib.h"
 
@@ -86,6 +96,19 @@ int screen_init(lua_State *L)
 
 
     vm_graphic_blt_frame(g_frame_blt_group, positions, 1);
+
+    VM_RESULT result;
+    VMUINT32 pool_size;
+    result = vm_graphic_get_font_pool_size(0,0,0,&pool_size);
+    if(VM_IS_SUCCEEDED(result))
+    {
+	    font_pool = vm_malloc(pool_size);
+	    if(NULL != font_pool)
+	    {
+		    vm_graphic_init_font_pool(font_pool, pool_size);
+	    }
+    }
+    vm_graphic_set_font_size(VM_GRAPHIC_LARGE_FONT);
     
     return 0;
 }
@@ -249,6 +272,17 @@ int screen_fill(lua_State *L)
     return 0;
 }
 
+int screen_text(lua_State *L)
+{
+	uint16_t color = g_color_565;
+	uint16_t x = luaL_checkinteger(L, 1);
+	uint16_t y = luaL_checkinteger(L, 2);
+	char* text = luaL_checkstring(L, 1);
+	vm_chset_ascii_to_ucs2(g_wide_string, STRING_LENGTH * 2, text);
+	vm_graphic_draw_text(&g_frame, x, y, g_wide_string);
+	return 1;
+}
+
 
 static const luaL_Reg screen_lib[] =
 {
@@ -262,6 +296,7 @@ static const luaL_Reg screen_lib[] =
     {"update", screen_update},
     {"set_brightness", screen_set_brightness},
     {"touch", screen_on_touch},
+    {"text", screen_text},
     {NULL, NULL}
 };
 

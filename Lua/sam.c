@@ -28,8 +28,18 @@ int debug = 0; // for sam :(
 VM_AUDIO_HANDLE sam_handle = 0;
 VMUINT sam_size;
 VMINT sam_offset = 0;
+VMINT sam_volume = 3;
+void *sam_buffer = 0;
 
 VM_TIMER_ID_PRECISE sam_timer_id;
+
+int sam_set_volume(lua_State *L)
+{
+	sam_volume = luaL_checkint(L, 1);
+	vm_log_debug("sam_set_volume, 1st param=%d\n", sam_volume);
+	lua_pushnumber(L, sam_volume);
+	return 1;
+}
 
 int sam_stop()
 {
@@ -49,6 +59,11 @@ int sam_stop()
 		vm_log_debug("sam_stop(), sam_timer_id > 0 so delete the timer\n");
 		vm_timer_delete_precise(sam_timer_id);
 		sam_timer_id = 0;
+	}
+
+	if (sam_buffer != 0)
+	{
+		vm_free(sam_buffer);
 	}
 
 	return 1;
@@ -82,7 +97,9 @@ static void sam_put_data(void* buffer)
 		{
 			used_size = sam_size - sam_offset;
 		} else {
-			used_size = status.free_buffer_size;
+
+			used_size = chunk_size;
+//			used_size = status.free_buffer_size;
 		}
 	}
 	else
@@ -110,7 +127,18 @@ static void sam_put_data(void* buffer)
 	vm_free(data);
 	param.start_time = 0;
 	param.audio_path = VM_AUDIO_DEVICE_SPEAKER2;
-	param.volume = VM_AUDIO_VOLUME_6; // TODO use global set value
+	switch (sam_volume)
+	{
+		case 0 : param.volume = VM_AUDIO_VOLUME_0; break;
+		case 1 : param.volume = VM_AUDIO_VOLUME_1; break;
+		case 2 : param.volume = VM_AUDIO_VOLUME_2; break;
+		case 3 : param.volume = VM_AUDIO_VOLUME_3; break;
+		case 4 : param.volume = VM_AUDIO_VOLUME_4; break;
+		case 5 : param.volume = VM_AUDIO_VOLUME_5; break;
+		case 6 : param.volume = VM_AUDIO_VOLUME_6; break;
+		default : param.volume = VM_AUDIO_VOLUME_3; break;
+	}
+
 	ret = vm_audio_stream_play_start(sam_handle, &param);
 	vm_log_debug("vm_audio_stream_play_start=>%d\n", ret);
 
@@ -139,6 +167,18 @@ void sam_audio_cb (VM_AUDIO_HANDLE handle, VM_AUDIO_RESULT result, void* buffer)
 
 void sam_put_data_timer_cb (VMINT tid, void* buffer)
 {
+	vm_log_debug("sam_put_data_timer_cb\n");
+	
+	// tried to just do a one shot so we weren't so busy... but didn't work. :(
+#if 0
+	if (sam_timer_id > 0)
+	{
+		vm_log_debug("delete the timer. what effect?\n");
+		vm_timer_delete_precise(sam_timer_id);
+		sam_timer_id = 0;
+	}
+#endif
+
 	sam_put_data(buffer);
 }
 
@@ -169,10 +209,10 @@ int sam_say(lua_State *L)
 	sam_size = GetBufferLength();
 	vm_log_debug("GetBufferLength()=%d\n", sam_size);
 
-	sam_size /= 7; // why?!?!?
+	sam_size /= 20; // why?!?!? was /= 50
 	vm_log_debug("translated to sam_size=%d\n", sam_size);
 
-	char *buffer = GetBuffer();
+	void *sam_buffer = GetBuffer();
 
 	VMINT res;
 	audio_cfg.is_stereo = 0;
@@ -180,12 +220,12 @@ int sam_say(lua_State *L)
 	audio_cfg.sample_frequency = VM_AUDIO_SAMPLE_FREQUENCY_22050;
 	audio_cfg.codec_type = VM_AUDIO_CODEC_PCM;
 
-	res = vm_audio_stream_play_open(&sam_handle, &audio_cfg, sam_audio_cb, buffer);
+	res = vm_audio_stream_play_open(&sam_handle, &audio_cfg, sam_audio_cb, sam_buffer);
 	vm_log_debug("vm_audio_stream_play_open=>%d, sam_as_handle=%d\n", res, sam_handle);
 
 	if (VM_IS_SUCCEEDED(res))
 	{
-		sam_timer_id = vm_timer_create_precise(1000, sam_put_data_timer_cb, buffer);
+		sam_timer_id = vm_timer_create_precise(750, sam_put_data_timer_cb, sam_buffer);
 		vm_log_debug("vm_timer_create_precise=>%d\n", sam_timer_id);
 	} else {
 		vm_log_debug("vm_audio_stream_play_open failed\n");
@@ -204,6 +244,7 @@ const LUA_REG_TYPE sam_map[] =
 {
 	{LSTRKEY("say"), LFUNCVAL(sam_say)},
 	{LSTRKEY("stop"), LFUNCVAL(sam_stop)},
+	{LSTRKEY("volume"), LFUNCVAL(sam_set_volume)},
 	{LNILKEY, LNILVAL}
 };
 

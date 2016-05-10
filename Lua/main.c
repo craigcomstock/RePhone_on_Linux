@@ -175,9 +175,9 @@ void handle_sysevt(VMINT message, VMINT param)
             //sys_timer_id = vm_timer_create_precise(SYS_TIMER_INTERVAL, sys_timer_callback, NULL);
 	    
 
-		bluelight();
 
             lua_setup();
+//		bluelight();
 
             break;
 		case SHELL_MESSAGE_ID:

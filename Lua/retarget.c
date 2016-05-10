@@ -88,11 +88,15 @@ int retarget_getc(void)
 	return ch;
 }
 
+extern void bluelight(); // from main.c
+
 //-------------------------------------------------------------------------------------------
 void __retarget_irq_handler(void* parameter, VM_DCL_EVENT event, VM_DCL_HANDLE device_handle)
 {
     if(event == VM_DCL_SIO_UART_READY_TO_READ)
     {
+	    bluelight();
+
         char data[SERIAL_BUFFER_SIZE];
         int i;
         VM_DCL_STATUS status;
