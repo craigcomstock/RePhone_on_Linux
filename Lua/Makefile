@@ -1,5 +1,8 @@
+GCC_BIN=~/gcc-arm-none-eabi-5_3-2016q1/bin/
+USE_SCREEN_MODULE=1
 
 WORKSPACE_PATH = ../
+LINKIT_ASSIST_SDK = ../../LINKIT_ASSIST_SDK/
 
 PROJECT = lua
 
@@ -24,9 +27,12 @@ GCC_BIN ?= /usr/bin/
 OBJECTS += $(WORKSPACE_PATH)common/lcd_sitronix_st7789s.o $(WORKSPACE_PATH)common/tp_goodix_gt9xx.o $(WORKSPACE_PATH)common/tp_i2c.o
 SYS_OBJECTS += $(WORKSPACE_PATH)common/gccmain.o
 INCLUDE_PATHS += -I. -I$(WORKSPACE_PATH)include -I$(WORKSPACE_PATH)common
-LIBRARY_PATHS += -L$(WORKSPACE_PATH)lib
-LIBRARIES += $(WORKSPACE_PATH)lib/LINKIT10/armgcc/percommon.a -lm
-LINKER_SCRIPT = $(WORKSPACE_PATH)lib/LINKIT10/armgcc/scat.ld
+LIBRARY_PATHS += -L$(LINKIT_ASSIST_SDK)lib
+#LIBRARY_PATHS += -L$(WORKSPACE_PATH)lib
+#LIBRARIES += $(WORKSPACE_PATH)lib/LINKIT10/armgcc/percommon.a -lm
+LIBRARIES += $(LINKIT_ASSIST_SDK)lib/LINKIT10/armgcc/percommon.a -lm
+#LINKER_SCRIPT = $(WORKSPACE_PATH)lib/LINKIT10/armgcc/scat.ld
+LINKER_SCRIPT = $(LINKIT_ASSIST_SDK)lib/LINKIT10/armgcc/scat.ld
 
 ###############################################################################
 AS      = $(GCC_BIN)arm-none-eabi-as
@@ -50,8 +56,8 @@ endif
 CPU = -mcpu=arm7tdmi-s -mthumb -mlittle-endian
 #CC_FLAGS = $(CPU) -c -fvisibility=hidden -fpic -O2 -Wa,-adhlns=$(PROJECT).lst -save-temps
 CC_FLAGS = $(CPU) -c -fvisibility=hidden -fpic -Os
-#CC_SYMBOLS += -D__HDK_LINKIT_ASSIST_2502__ -D__COMPILER_GCC__
-CC_SYMBOLS += -D__HDK_LINKIT_REPHONE__ -D__COMPILER_GCC__
+CC_SYMBOLS += -D__HDK_LINKIT_ASSIST_2502__ -D__COMPILER_GCC__
+#CC_SYMBOLS += -D__HDK_LINKIT_REPHONE__ -D__COMPILER_GCC__
 
 LD_FLAGS = $(CPU) -Os -Wl,--gc-sections --specs=nosys.specs -fpic -pie -Wl,-Map=$(PROJECT).map  -Wl,--entry=gcc_entry -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-unresolved-symbols
 LD_SYS_LIBS =
@@ -95,3 +101,8 @@ size: $(PROJECT).elf
 
 flash: $(PROJECT).vxp
 	$(PUSH)
+
+install: $(PROJECT).vxp
+	cp $(PROJECT).vxp /media/3021-01A2/MRE
+	cp *.lua /media/3021-01A2
+	cp autostart.txt /media/3021-01A2

@@ -20,13 +20,20 @@
 #include "vmdatetime.h"
 #include "vmusb.h"
 
+//#include "vmres.h"
+
+//#include "lcd_sitronix_st7789s.h"
+
+
 #include "shell.h"
 
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 
-//#define USE_SCREEN_MODULE
+#define USE_SCREEN_MODULE
+
+extern void *g_heap;
 
 // used external functions
 extern int gpio_get_handle(int pin, VM_DCL_HANDLE* handle);
@@ -63,10 +70,13 @@ int sys_wdt_rst_time = 0;
 int no_activity_time = 0;			// no activity counter
 int max_no_activity_time = 300;	    // time with no activity before shut down in seconds
 int wakeup_interval = 20*60;		// regular wake up interval in seconds
+//int led_blink = 0;
 int led_blink = BLUELED;			// led blinking during session, set to 0 for no led blink
 int sys_wdt_time = 0;
 int wdg_reboot_cb = LUA_NOREF;		// Lua callback function called before reboot
 int shutdown_cb = LUA_NOREF;		// Lua callback function called before shutdown
+
+int g_graphic_ready = 0;
 
 
 // Local variables
@@ -297,6 +307,8 @@ static void lua_setup()
 	}
 	*/
 
+    g_heap = (void*)1; // signal to gccmain._sbrk to report allocations! :p
+
     handle = vm_thread_create(shell_thread, L, 245);
 }
 
@@ -305,6 +317,10 @@ static void handle_sysevt(VMINT message, VMINT param)
 {
     switch (message) {
         case VM_EVENT_CREATE:
+		vm_log_debug("[SYSEVT] VM_EVENT_CREATE\n");
+
+//		vm_res_init(0);
+
             lua_setup();
             break;
 
@@ -322,11 +338,13 @@ static void handle_sysevt(VMINT message, VMINT param)
 
         case VM_EVENT_PAINT:
         	// The graphics system is ready for application to use
-        	//vm_log_debug("[SYSEVT] GRAPHIC READY");
+        	vm_log_debug("[SYSEVT] GRAPHIC READY");
+		g_graphic_ready = 1;
         	break;
 
         case VM_EVENT_QUIT:
         	vm_log_debug("[SYSEVT] QUIT");
+//		vm_res_release();
             break;
 
         case 18:
@@ -347,6 +365,8 @@ static void handle_sysevt(VMINT message, VMINT param)
 /****************/
 void vm_main(void)
 {
+//	lcd_st7789s_init();
+
 	_led_init();
 
 	VM_TIMER_ID_HISR sys_timer_id = vm_timer_create_hisr("WDGTMR");

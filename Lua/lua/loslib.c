@@ -35,8 +35,9 @@
 #include "vmlog.h"
 #include "vmtimer.h"
 #include "vmusb.h"
+#include "vmmemory.h"
 
-//#define USE_YMODEM
+#define USE_YMODEM
 
 #if defined USE_YMODEM
 #include "ymodem.h"
@@ -423,16 +424,31 @@ int os_getver(lua_State* L) {
 }
 
 extern int g_memory_size_b;
+extern int g_memory_size;
+extern void* g_base_address;
+extern void* g_heap;
 
 //============================
 int os_getmem(lua_State* L) {
-	//VMCHAR value[32] = {0};
-	//VMUINT written = vm_firmware_get_info(value, sizeof(value)-1, VM_FIRMWARE_HOST_MAX_MEM);
+	VMCHAR value[32] = {0};
+	VMUINT written = vm_firmware_get_info(value, sizeof(value)-1, VM_FIRMWARE_HOST_MAX_MEM);
+
     global_State *g = G(L);
+    vm_log_debug("maxmem: %d, totalbytes: %d, memlimit: %d, memory_size: %d\n",
+		    vm_str_strtoi(value)*1024,
+		    g->totalbytes,
+		    g->memlimit,
+		    g_memory_size_b);
+//    vm_log_debug("g_base_address=%#08x, g_memory_size=%d, g_heap=%#08x\n", g_base_address,
+//		    g_memory_size, g_heap);
+
 	lua_pushinteger(L, g->totalbytes );
 	lua_pushinteger(L, g->memlimit );
-	//lua_pushinteger(L, vm_str_strtoi(value)*1024);
+	lua_pushinteger(L, vm_str_strtoi(value)*1024);
 	lua_pushinteger(L, g_memory_size_b );
+	lua_pushinteger(L, g_memory_size);
+//	lua_pushinteger(L, (int)g_base_address);
+//	lua_pushinteger(L, (int)g_heap);
 
     return 3;
 }
@@ -659,6 +675,77 @@ static int os_onwdg_cb (lua_State *L) {
     return 1;
 }
 
+static int os_malloc_dma (lua_State *L)
+{
+	uint32_t size = luaL_checklong(L,1);
+	VMUINT8* p = vm_malloc_dma(size);
+	vm_log_debug("vm_malloc_dma(%d)=>%#08x\n", size, p);
+	lua_pushlightuserdata(L,p);
+	return 1;
+}
+
+static int os_malloc (lua_State *L) 
+{
+	uint32_t size = luaL_checklong(L,1);
+	VMUINT8* p = vm_malloc(size);
+	vm_log_debug("vm_malloc(%p)=>%#08x\n", size, p);
+	lua_pushlightuserdata(L,p);
+	return 1;
+}
+
+static int real_malloc (lua_State *L)
+{
+	uint32_t size = luaL_checklong(L,1);
+	void *p = malloc(size);
+	vm_log_debug("malloc(%d)=>%#08x\n", size, p);
+	lua_pushlightuserdata(L,p);
+	return 1;
+}
+
+
+static uint32_t os_getaddr(lua_State *L, int index) {
+	if (lua_isuserdata(L,index)) {
+		return (uint32_t)lua_touserdata(L,index);
+	} else {
+		// TODO handle errors like LONG_MAX, LONG_MIN and check errno.
+		return (uint32_t)strtoll(lua_tostring(L,index),NULL,0);
+	}
+}
+
+static int real_free (lua_State *L)
+{
+	uint32_t addr = os_getaddr(L,1);
+	vm_log_debug("free(%#08x)\n", addr);
+	free((void*)addr);
+	return 1;
+}
+
+static int os_free (lua_State *L) 
+{
+	uint32_t addr = os_getaddr(L,1);
+	vm_log_debug("vm_free(%#08x)\n", addr);
+	vm_free((void*)addr);
+	return 1;
+}
+
+static int os_peek (lua_State *L) {
+	uint32_t addr = os_getaddr(L,1);
+	uint32_t val = *((volatile uint32_t *)addr);
+
+//	vm_log_debug("peek(%#08x)=%#08x\n", addr, val);
+
+	lua_pushnumber(L, val);
+	return 1;
+}
+
+static int os_poke (lua_State *L) {
+	uint32_t addr = os_getaddr(L,1);
+	uint32_t val = luaL_checklong(L,2);
+//	vm_log_debug("poke(%#08x,%#08x)\n", addr, val);
+	*((volatile uint32_t *)addr) = val;
+	return 1;
+}
+
 //=======================================
 static int os_onshdwn_cb (lua_State *L) {
 	if ((lua_type(L, 1) == LUA_TFUNCTION) || (lua_type(L, 1) == LUA_TLIGHTFUNCTION)) {
@@ -714,7 +801,6 @@ static int file_recv( lua_State* L )
 
   return 0;
 }
-
 
 //==================================
 static int file_send( lua_State* L )
@@ -822,6 +908,13 @@ const LUA_REG_TYPE syslib[] = {
   {LSTRKEY("usb"),      	LFUNCVAL(os_usb)},
   {LSTRKEY("onreboot"), 	LFUNCVAL(os_onwdg_cb)},
   {LSTRKEY("onshutdown"),	LFUNCVAL(os_onshdwn_cb)},
+  {LSTRKEY("vm_malloc"), LFUNCVAL(os_malloc)},
+  {LSTRKEY("vm_malloc_dma"), LFUNCVAL(os_malloc_dma)},
+  {LSTRKEY("malloc"), LFUNCVAL(real_malloc)},
+  {LSTRKEY("free"), LFUNCVAL(real_free)},
+  {LSTRKEY("vm_free"), LFUNCVAL(os_free)},
+  {LSTRKEY("poke"), LFUNCVAL(os_poke)},
+  {LSTRKEY("peek"), LFUNCVAL(os_peek)},
 #if defined USE_YMODEM
   {LSTRKEY("yrecv"),    	LFUNCVAL(file_recv)},
   {LSTRKEY("ysend"),    	LFUNCVAL(file_send)},

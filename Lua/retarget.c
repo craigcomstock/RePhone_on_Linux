@@ -40,6 +40,9 @@ void retarget_putc(char ch)
     VM_DCL_BUFFER_LENGTH writen_len = 0;
    	if (retarget_target >= 0) vm_dcl_write(retarget_target, (VM_DCL_BUFFER *)&ch, 1, &writen_len, g_owner_id);
    	else if ((g_btspp_connected) && (retarget_target == -1000)) vm_bt_spp_write(g_btspp_id, &ch, 1);
+
+	if(ch==10)
+		retarget_putc(13);
 }
 
 //---------------------------------

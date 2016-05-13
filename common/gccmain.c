@@ -28,6 +28,8 @@ unsigned int g_memory_size = 1024 * 800;  // heap for lua usage, will be adjuste
 int g_memory_size_b = 0;                  // adjusted heap for C usage
 static void* g_base_address = NULL;       // base address of the lua heap
 
+void* g_heap = NULL;
+
 extern void vm_main();
 
 int __g_errno = 0;
@@ -54,6 +56,8 @@ int* __errno()
 //----------------------------
 extern caddr_t _sbrk(int incr)
 {
+//	vm_log_debug("_sbrk(incr=%d)\n", incr);
+
     static void* heap = NULL;
     static void* base = NULL;
     void* prev_heap;
@@ -65,16 +69,22 @@ extern caddr_t _sbrk(int incr)
         } else {
             heap = base;
             vm_log_info("Init memory success, base: %#08x, size: %d, heap: %d", (caddr_t)g_base_address, g_memory_size, g_memory_size_b);
+
+	    vm_log_info("base=%p, heap=%p\n", base, heap);
         }
     }
 
     prev_heap = heap;
 
     if(heap + incr > g_base_address + g_memory_size) {
-        vm_log_fatal("Not enough memory");
+        vm_log_fatal("Not enough memory, heap=%p incr=%d g_base_address=%p, g_memory_size=%d\n", heap, incr, g_base_address, g_memory_size);
     }
     else {
     	heap += incr;
+	    if(g_heap) {
+		    vm_log_debug("_sbrk OK, new heap=%p incr=%d g_base_address=%p, g_memory_size=%d\n", heap, incr, g_base_address, g_memory_size);
+		    g_heap = heap;
+	    }
     }
 
     return (caddr_t)prev_heap;
